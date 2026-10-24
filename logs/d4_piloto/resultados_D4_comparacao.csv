@@ -1,0 +1,3 @@
+metodo,desvios_injetados,apontados,acertos,falsos_positivos,nao_encontrados,duracao_s,detalhe_nao_encontrados,detalhe_falsos_positivos
+manual,3,0,0,0,3,461.77,edge-router-1:C01; edge-router-2:C01; edge-router-3:C03,
+automatizado,3,3,3,0,0,4.26,,

@@ -1,0 +1,8 @@
+# Experimento D5 - clientes para o teste de contingencia
+# roteador_backup = cliente com ACESSO REDUNDANTE (segundo circuito em outra borda)
+clientes:
+  - {id: 111, nome: EMPRESA-LAMBDA, circuito: CORP-0111, velocidade: 1G,   roteador: edge-router-1, roteador_backup: edge-router-3, prefixo: 172.16.111.0/24}
+  - {id: 112, nome: EMPRESA-MI,     circuito: CORP-0112, velocidade: 500M, roteador: edge-router-1, roteador_backup: edge-router-3, prefixo: 172.16.112.0/24}
+  - {id: 113, nome: EMPRESA-NI,     circuito: CORP-0113, velocidade: 100M, roteador: edge-router-1, prefixo: 172.16.113.0/24}
+  - {id: 114, nome: EMPRESA-XI,     circuito: CORP-0114, velocidade: 200M, roteador: edge-router-2, prefixo: 172.16.114.0/24}
+  - {id: 115, nome: EMPRESA-OMICRON, circuito: CORP-0115, velocidade: 100M, roteador: edge-router-2, prefixo: 172.16.115.0/24}

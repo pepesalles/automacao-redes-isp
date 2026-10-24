@@ -1,0 +1,4 @@
+netmiko==4.7.0
+napalm==5.2.0
+jinja2
+pyyaml

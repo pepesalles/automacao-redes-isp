@@ -1,0 +1,12 @@
+# Fonte da verdade: clientes corporativos a ativar
+clientes:
+  - {id: 101, nome: EMPRESA-ALFA,    circuito: CORP-0101, velocidade: 100M, roteador: edge-router-1, prefixo: 172.16.101.0/24}
+  - {id: 102, nome: EMPRESA-BETA,    circuito: CORP-0102, velocidade: 200M, roteador: edge-router-1, prefixo: 172.16.102.0/24}
+  - {id: 103, nome: EMPRESA-GAMA,    circuito: CORP-0103, velocidade: 100M, roteador: edge-router-1, prefixo: 172.16.103.0/24}
+  - {id: 104, nome: EMPRESA-DELTA,   circuito: CORP-0104, velocidade: 50M,  roteador: edge-router-1, prefixo: 172.16.104.0/24}
+  - {id: 105, nome: EMPRESA-EPSILON, circuito: CORP-0105, velocidade: 500M, roteador: edge-router-1, prefixo: 172.16.105.0/24}
+  - {id: 106, nome: EMPRESA-ZETA,    circuito: CORP-0106, velocidade: 100M, roteador: edge-router-2, prefixo: 172.16.106.0/24}
+  - {id: 107, nome: EMPRESA-ETA,     circuito: CORP-0107, velocidade: 1G,   roteador: edge-router-2, prefixo: 172.16.107.0/24}
+  - {id: 108, nome: EMPRESA-TETA,    circuito: CORP-0108, velocidade: 100M, roteador: edge-router-2, prefixo: 172.16.108.0/24}
+  - {id: 109, nome: EMPRESA-IOTA,    circuito: CORP-0109, velocidade: 200M, roteador: edge-router-2, prefixo: 172.16.109.0/24}
+  - {id: 110, nome: EMPRESA-KAPA,    circuito: CORP-0110, velocidade: 100M, roteador: edge-router-2, prefixo: 172.16.110.0/24}

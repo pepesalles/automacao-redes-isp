@@ -1,0 +1,271 @@
+==============================================================================
+EVIDENCIAS - EXPERIMENTO D5: CONTINGENCIA EM FALHA DE ROTEADOR DE BORDA
+TCC - Gabriel Henrique de Salles - PUCPR
+==============================================================================
+Data: 14/10/2026, a partir das 10:07 (BRT) / 13:07 (UTC nos roteadores).
+Origem: saidas copiadas do Linux Server (automacao) e dos consoles do CML.
+Linhas de prompt vazias e o eco duplicado do console foram removidos.
+Script: 08_ativar_contingencia.py (md5 e9b89529687937ee09dec896e5d4ea9e)
+Dados: clientes_contingencia.yaml
+  111 e 112: edge-router-1, com acesso redundante (roteador_backup: edge-router-3)
+  113: edge-router-1, circuito unico (sem backup)
+  114 e 115: edge-router-2, circuito unico
+Regra de decisao por cliente (testa a porta SSH do roteador principal, limite de 5 s):
+  principal acessivel         -> PRINCIPAL
+  principal fora + com backup -> CONTINGENCIA (ativa no roteador de backup)
+  principal fora + sem backup -> FALHA_SEGURA (nada aplicado, erro registrado)
+Falha simulada: shutdown da interface Ethernet0/1 do core (enlace com o edge-1).
+
+RESULTADO
+  Cliente | Acesso                 | Controle (rede normal)        | Falha do edge-1
+  --------+------------------------+-------------------------------+----------------------------------
+    111   | redundante (e1 + e3)   | PRINCIPAL edge-1  OK  3,75 s  | CONTINGENCIA edge-3  OK  3,72 s
+    112   | redundante (e1 + e3)   | PRINCIPAL edge-1  OK  3,40 s  | CONTINGENCIA edge-3  OK  3,66 s
+    113   | circuito unico (e1)    | PRINCIPAL edge-1  OK  3,38 s  | FALHA_SEGURA  nada aplicado
+    114   | circuito unico (e2)    | PRINCIPAL edge-2  OK  3,34 s  | PRINCIPAL edge-2     OK  6,87 s
+    115   | circuito unico (e2)    | PRINCIPAL edge-2  OK  3,76 s  | PRINCIPAL edge-2     OK  6,71 s
+  Deteccao da falha: imediata (0,0 s) - o core respondeu 'Destination Host
+  Unreachable', sem esperar o limite de 5 s.
+
+==============================================================================
+CENARIO 1 - CONTROLE (rede normal)
+==============================================================================
+$ date
+Wed Oct 14 10:07:53 -03 2026
+$ python 02_backup.py
+[OK]   core-router: backups/core-router_20261014-100820.cfg (146 linhas)
+[OK]   edge-router-1: backups/edge-router-1_20261014-100820.cfg (139 linhas)
+[OK]   edge-router-2: backups/edge-router-2_20261014-100820.cfg (140 linhas)
+[OK]   edge-router-3: backups/edge-router-3_20261014-100820.cfg (139 linhas)
+
+CORE-ROUTER#sh clock
+13:07:09.852 UTC Wed Oct 14 2026
+CORE-ROUTER#send log "===== [D5-CONTROLE] INICIO ====="
+
+$ python 08_ativar_contingencia.py controle
+===== [D5-CONTROLE] INICIO =====
+
+>>> cliente-111: principal edge-router-1 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-111 EMPRESA-LAMBDA ===
+  Configuracao gerada:
+    interface Loopback111
+     description CLIENTE:EMPRESA-LAMBDA | CIRCUITO:CORP-0111 | VEL:1G
+     ip address 172.16.111.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.111.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.7 s)
+
+>>> cliente-112: principal edge-router-1 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-112 EMPRESA-MI ===
+  Configuracao gerada:
+    interface Loopback112
+     description CLIENTE:EMPRESA-MI | CIRCUITO:CORP-0112 | VEL:500M
+     ip address 172.16.112.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.112.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.4 s)
+
+>>> cliente-113: principal edge-router-1 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-113 EMPRESA-NI ===
+  Configuracao gerada:
+    interface Loopback113
+     description CLIENTE:EMPRESA-NI | CIRCUITO:CORP-0113 | VEL:100M
+     ip address 172.16.113.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.113.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.4 s)
+
+>>> cliente-114: principal edge-router-2 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-114 EMPRESA-XI ===
+  Configuracao gerada:
+    interface Loopback114
+     description CLIENTE:EMPRESA-XI | CIRCUITO:CORP-0114 | VEL:200M
+     ip address 172.16.114.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.114.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.3 s)
+
+>>> cliente-115: principal edge-router-2 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-115 EMPRESA-OMICRON ===
+  Configuracao gerada:
+    interface Loopback115
+     description CLIENTE:EMPRESA-OMICRON | CIRCUITO:CORP-0115 | VEL:100M
+     ip address 172.16.115.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.115.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.7 s)
+
+===== RESUMO D5-CONTROLE =====
+Cliente Decisao       Roteador usado  Resultado     Total (s)
+    111 PRINCIPAL     edge-router-1   OK                 3.75
+    112 PRINCIPAL     edge-router-1   OK                 3.40
+    113 PRINCIPAL     edge-router-1   OK                 3.38
+    114 PRINCIPAL     edge-router-2   OK                 3.34
+    115 PRINCIPAL     edge-router-2   OK                 3.76
+===== [D5-CONTROLE] FIM =====
+
+CORE-ROUTER#show ip bgp | include 172.16.11
+ *>i  172.16.111.0/24  2.2.2.2                  0    100      0 i
+ *>i  172.16.112.0/24  2.2.2.2                  0    100      0 i
+ *>i  172.16.113.0/24  2.2.2.2                  0    100      0 i
+ *>i  172.16.114.0/24  3.3.3.3                  0    100      0 i
+ *>i  172.16.115.0/24  3.3.3.3                  0    100      0 i
+CORE-ROUTER#send log "===== [D5-CONTROLE] FIM ====="
+
+$ python 08_ativar_contingencia.py --remover
+cliente-111: removido
+cliente-112: removido
+cliente-113: removido
+cliente-114: removido
+cliente-115: removido
+
+CORE-ROUTER#show ip bgp | include 172.16.11
+CORE-ROUTER#
+
+==============================================================================
+CENARIO 2 - FALHA DO EDGE-1
+==============================================================================
+CORE-ROUTER#send log "===== [D5-FALHA] INICIO ====="
+CORE-ROUTER#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+CORE-ROUTER(config)#interface Ethernet0/1
+CORE-ROUTER(config-if)#shutdown
+CORE-ROUTER(config-if)#end
+CORE-ROUTER#show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+4.4.4.4           1   FULL/DR         00:00:39    10.0.1.10       Ethernet0/3
+3.3.3.3           1   FULL/DR         00:00:39    10.0.1.6        Ethernet0/2
+
+$ echo "===== [D5-FALHA] INICIO ====="
+===== [D5-FALHA] INICIO =====
+$ ping -c 2 2.2.2.2
+PING 2.2.2.2 (2.2.2.2) 56(84) bytes of data.
+From 10.0.1.14 icmp_seq=1 Destination Host Unreachable
+From 10.0.1.14 icmp_seq=2 Destination Host Unreachable
+
+--- 2.2.2.2 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1002ms
+
+$ python 08_ativar_contingencia.py falha
+===== [D5-FALHA] INICIO =====
+
+>>> cliente-111: principal edge-router-1 INACESSIVEL (0.0 s) -> CONTINGENCIA
+
+=== cliente-111 EMPRESA-LAMBDA ===
+  Configuracao gerada:
+    interface Loopback111
+     description CLIENTE:EMPRESA-LAMBDA | CIRCUITO:CORP-0111 | VEL:1G
+     ip address 172.16.111.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.111.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.7 s)
+
+>>> cliente-112: principal edge-router-1 INACESSIVEL (0.0 s) -> CONTINGENCIA
+
+=== cliente-112 EMPRESA-MI ===
+  Configuracao gerada:
+    interface Loopback112
+     description CLIENTE:EMPRESA-MI | CIRCUITO:CORP-0112 | VEL:500M
+     ip address 172.16.112.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.112.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (3.6 s)
+
+>>> cliente-113: principal edge-router-1 INACESSIVEL (0.0 s) -> FALHA_SEGURA
+  [FALHA SEGURA] edge-router-1 fora do ar e cliente sem acesso redundante: nenhuma configuracao aplicada; abrir chamado
+
+>>> cliente-114: principal edge-router-2 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-114 EMPRESA-XI ===
+  Configuracao gerada:
+    interface Loopback114
+     description CLIENTE:EMPRESA-XI | CIRCUITO:CORP-0114 | VEL:200M
+     ip address 172.16.114.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.114.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (6.8 s)
+
+>>> cliente-115: principal edge-router-2 acessivel (0.0 s) -> PRINCIPAL
+
+=== cliente-115 EMPRESA-OMICRON ===
+  Configuracao gerada:
+    interface Loopback115
+     description CLIENTE:EMPRESA-OMICRON | CIRCUITO:CORP-0115 | VEL:100M
+     ip address 172.16.115.1 255.255.255.0
+     no shutdown
+    router bgp 65001
+     network 172.16.115.0 mask 255.255.255.0
+  [OK] BGP ok; ping 100% (6.7 s)
+
+===== RESUMO D5-FALHA =====
+Cliente Decisao       Roteador usado  Resultado     Total (s)
+    111 CONTINGENCIA  edge-router-3   OK                 3.72
+    112 CONTINGENCIA  edge-router-3   OK                 3.66
+    113 FALHA_SEGURA  -               NAO_APLICADO       0.00
+    114 PRINCIPAL     edge-router-2   OK                 6.87
+    115 PRINCIPAL     edge-router-2   OK                 6.71
+===== [D5-FALHA] FIM =====
+
+CORE-ROUTER#show ip bgp | include 172.16.11
+ *>i  172.16.111.0/24  4.4.4.4                  0    100      0 i
+ *>i  172.16.112.0/24  4.4.4.4                  0    100      0 i
+ *>i  172.16.114.0/24  3.3.3.3                  0    100      0 i
+ *>i  172.16.115.0/24  3.3.3.3                  0    100      0 i
+CORE-ROUTER#show ip bgp 172.16.113.0
+% Network not in table
+
+--- Restabelecimento do edge-1 ---
+CORE-ROUTER#configure terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+CORE-ROUTER(config)#interface Ethernet0/1
+CORE-ROUTER(config-if)#no shutdown
+CORE-ROUTER(config-if)#end
+CORE-ROUTER#show ip bgp summary
+BGP router identifier 1.1.1.1, local AS number 65001
+BGP table version is 179, main routing table version 179
+4 network entries using 992 bytes of memory
+4 path entries using 544 bytes of memory
+1/1 BGP path/bestpath attribute entries using 304 bytes of memory
+0 BGP route-map cache entries using 0 bytes of memory
+0 BGP filter-list cache entries using 0 bytes of memory
+BGP using 1840 total bytes of memory
+BGP activity 61/57 prefixes, 90/86 paths, scan interval 60 secs
+10 networks peaked at 20:00:05 Sep 27 2026 UTC (2w2d ago)
+
+Neighbor        V           AS MsgRcvd MsgSent   TblVer  InQ OutQ Up/Down  State/PfxRcd
+2.2.2.2         4        65001       5       8      179    0    0 00:01:25        0
+3.3.3.3         4        65001      34      41      179    0    0 00:23:40        2
+4.4.4.4         4        65001      31      43      179    0    0 00:23:40        2
+
+EDGE-ROUTER-1#show running-config | include Loopback11
+EDGE-ROUTER-1#
+(saida vazia: nenhuma configuracao do cliente 113 foi aplicada no edge-1)
+
+CORE-ROUTER#send log "===== [D5-FALHA] FIM ====="
+$ echo "===== [D5-FALHA] FIM ====="
+===== [D5-FALHA] FIM =====
+
+--- Limpeza ---
+$ python 08_ativar_contingencia.py --remover
+cliente-111: removido
+cliente-112: removido
+cliente-113: removido
+cliente-114: removido
+cliente-115: removido
+
+CORE-ROUTER#show ip bgp | include 172.16.11
+CORE-ROUTER#

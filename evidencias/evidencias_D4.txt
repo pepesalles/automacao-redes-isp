@@ -1,0 +1,1164 @@
+==============================================================================
+EVIDENCIAS - EXPERIMENTO D4: AUDITORIA DE CONFORMIDADE (manual x automatizada)
+TCC - Gabriel Salles - PUCPR
+==============================================================================
+Origem: saidas copiadas dos terminais do Linux Server (automacao) e dos consoles
+dos roteadores no CML. Linhas de prompt vazias e o eco duplicado do console foram
+removidos. O hash de senha (username admin ... secret 9 ...) foi substituido por
+[HASH REMOVIDO]. Nenhum outro conteudo foi alterado.
+
+Horarios: Linux em BRT (UTC-3); roteadores em UTC. Relogios sincronizados por NTP
+(core = servidor NTP stratum 3).
+
+Script: 09_auditoria.py
+  - Rodada piloto: catalogo fixo de 7 desvios, 3 sorteados.
+  - Rodadas 1 a 3: desvios gerados na hora (2 a 4, entre 20 combinacoes
+    roteador x regra, com variacoes). md5 8b817b80e9529349b28c36c4b5d6bb31
+
+Regras auditadas: C01 no ip domain lookup | C02 logging buffered 64000 |
+C03 service timestamps log datetime msec | C04 admin privilege 15 |
+C05 vty login local | C06 vty somente SSH | C07 core como servidor NTP |
+C08 loopbacks de cliente (Loopback1xx) com descricao padrao |
+A01 (aviso) servidor HTTP desabilitado.
+C04 e C05 sao auditadas, mas nao injetadas (cortariam o acesso SSH do script).
+
+RESULTADO CONSOLIDADO (rodadas 1 a 3; a piloto nao entra na estatistica)
+
+  Rodada | Injetados | Manual: acertos / falsos+ / tempo | Automatizado: acertos / falsos+ / tempo
+  -------+-----------+------------------------------------+------------------------------------------
+    1    |     3     |   2/3  /  0  /  371,2 s            |   3/3  /  0  /  4,4 s
+    2    |     4     |   3/4  /  0  /  405,6 s            |   4/4  /  0  /  4,2 s
+    3    |     2     |   2/2  /  0  /  261,5 s            |   2/2  /  0  /  4,3 s
+  -------+-----------+------------------------------------+------------------------------------------
+  Total  |     9     |   7/9 (78%) / 0 / media 346,1 s,  |   9/9 (100%) / 0 / media 4,3 s,
+         |           |   mediana 371,2 s                  |   mediana 4,3 s
+
+  Desvios nao encontrados no manual: R1 edge-router-3 C08 (Loopback177 sem
+  descricao); R2 core-router C06 (transport input telnet ssh).
+
+==============================================================================
+RODADA PILOTO - 29/09/2026, ~19:34 a ~20:10 (BRT)  [descartada da estatistica]
+==============================================================================
+Motivo do descarte: a lista de verificacao entregue ao operador tinha duas
+ambiguidades - C02 citava 'logging buffered 64000 debugging' (o IOS omite
+'debugging', nivel padrao) e C08 nao deixava claro que so se aplica quando
+existe Loopback1xx. Resultado: 7 falsos positivos causados pela lista, nao pelo
+operador. A lista foi corrigida e o gerador de desvios foi trocado por um
+aleatorio antes das rodadas validas. Logs em logs/d4_piloto/.
+
+--- Linux: data, backup e linha de base ---
+$ date
+Tue Sep 29 19:34:17 -03 2026
+$ python 02_backup.py
+[OK]   core-router: backups/core-router_20260929-193436.cfg (146 linhas)
+[OK]   edge-router-1: backups/edge-router-1_20260929-193436.cfg (139 linhas)
+[OK]   edge-router-2: backups/edge-router-2_20260929-193436.cfg (140 linhas)
+[OK]   edge-router-3: backups/edge-router-3_20260929-193436.cfg (139 linhas)
+$ python 09_auditoria.py baseline
+===== [D4-BASELINE] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 0 FALHA(s) | 4 AVISO(s) | 4.0 s
+===== [D4-BASELINE] FIM - AUDITORIA =====
+
+--- Linux: auditoria manual (as cegas) ---
+$ python 09_auditoria.py --manual desvios
+===== [D4-DESVIOS] AUDITORIA MANUAL =====
+Durante a auditoria, registre aqui cada desvio encontrado:
+  formato : <roteador> <regra>      ex.: e1 C01
+  roteador: core | e1 | e2 | e3     regra: C01 a C08
+  apagar  : remove o ultimo registro
+  fim     : para o cronometro e grava
+
+Pressione ENTER para INICIAR o cronometro...
+[00:00] desvio> core c02
+  registrado: core-router C02  (total: 1)
+[00:49] desvio> e1 c01
+  registrado: edge-router-1 C01  (total: 2)
+[02:21] desvio> e1 c02
+  registrado: edge-router-1 C02  (total: 3)
+[02:40] desvio> e1 c08
+  registrado: edge-router-1 C08  (total: 4)
+[03:54] desvio> e2 c01
+  registrado: edge-router-2 C01  (total: 5)
+[04:15] desvio> e2 c02
+  registrado: edge-router-2 C02  (total: 6)
+[04:34] desvio> e2 c08
+  registrado: edge-router-2 C08  (total: 7)
+[05:22] desvio> e3 c02
+  registrado: edge-router-3 C02  (total: 8)
+[06:20] desvio> e3 c03
+  registrado: edge-router-3 C03  (total: 9)
+[06:42] desvio> e3 c08
+  registrado: edge-router-3 C08  (total: 10)
+[07:23] desvio> fim
+
+  Tempo total: 461.8 s | desvios apontados: 10
+    - core-router C02
+    - edge-router-1 C01
+    - edge-router-1 C02
+    - edge-router-1 C08
+    - edge-router-2 C01
+    - edge-router-2 C02
+    - edge-router-2 C08
+    - edge-router-3 C02
+    - edge-router-3 C03
+    - edge-router-3 C08
+===== [D4-DESVIOS] MANUAL - registrado em logs/resultados_D4_manual.csv =====
+
+--- Consoles dos roteadores (auditoria manual) ---
+CORE-ROUTER#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+CORE-ROUTER#sh run | inc buffered
+logging buffered 64000
+CORE-ROUTER#sh run | inc msec
+service timestamps debug datetime msec
+service timestamps log datetime msec
+CORE-ROUTER#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+CORE-ROUTER#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+CORE-ROUTER#sh run | sec ntp
+ntp master 3
+
+EDGE-ROUTER-1#sh clock
+23:03:05.144 UTC Tue Sep 29 2026
+EDGE-ROUTER-1#sh run | inc domain
+ip domain name isp-lab.local
+EDGE-ROUTER-1#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-1#sh run | inc msec
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-1#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-1#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-1#sh run | inc interface Loopback
+interface Loopback0
+EDGE-ROUTER-1#sh run | inc desc
+ description LINK-TO-CORE
+
+EDGE-ROUTER-2#sh clock
+23:05:04.235 UTC Tue Sep 29 2026
+EDGE-ROUTER-2#sh run | inc domain
+ip domain name isp-lab.local
+EDGE-ROUTER-2#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-2#sh run | inc msec
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-2#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-2#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-2#sh run | inc interface
+interface Loopback0
+interface Ethernet0/0
+interface Ethernet0/1
+interface Ethernet0/2
+interface Ethernet0/3
+
+EDGE-ROUTER-3#sh clock
+23:07:02.621 UTC Tue Sep 29 2026
+EDGE-ROUTER-3#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-3#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-3#sh run | inc msec
+service timestamps debug datetime msec
+EDGE-ROUTER-3#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-3#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-3#sh run | inc int
+  notify syslog contenttype plaintext
+interface Loopback0
+interface Ethernet0/0
+interface Ethernet0/1
+interface Ethernet0/2
+interface Ethernet0/3
+
+--- Linux: auditoria automatizada ---
+$ python 09_auditoria.py desvios
+===== [D4-DESVIOS] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [FALHA] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [FALHA] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [FALHA] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 3 FALHA(s) | 4 AVISO(s) | 4.3 s
+===== [D4-DESVIOS] FIM - AUDITORIA =====
+
+--- Linux: gabarito ---
+$ python 09_auditoria.py --gabarito
+===== [D4] GABARITO =====
+  D-a  edge-router-1  regra C01  ->  ip domain lookup
+  D-f  edge-router-2  regra C01  ->  ip domain lookup
+  D-g  edge-router-3  regra C03  ->  no service timestamps log datetime msec
+
+Nota: a tabela de comparacao impressa nesta execucao (manual 0/3) estava
+errada por um defeito de leitura do CSV (cabecalho antigo de 3 colunas),
+corrigido depois. Conferencia correta a partir dos registros acima:
+  manual        461,8 s  acertos 3/3  falsos positivos 7 (4x C02 e 3x C08, ver motivo)
+  automatizado    4,3 s  acertos 3/3  falsos positivos 0
+
+$ python 09_auditoria.py --reverter
+===== [D4] TODOS OS DESVIOS DO CATALOGO REVERTIDOS =====
+
+==============================================================================
+NOVA LINHA DE BASE - 29/09/2026, antes da rodada 1 (logs da piloto movidos)
+==============================================================================
+$ mkdir -p logs/d4_piloto && mv -n logs/resultados_D4_*.csv logs/d4_piloto/
+$ md5sum 09_auditoria.py
+8b817b80e9529349b28c36c4b5d6bb31  09_auditoria.py
+$ python 09_auditoria.py baseline
+===== [D4-BASELINE] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 0 FALHA(s) | 4 AVISO(s) | 4.1 s
+===== [D4-BASELINE] FIM - AUDITORIA =====
+
+==============================================================================
+RODADA 1 - 29/09/2026, inicio 23:11 (BRT)
+==============================================================================
+$ date
+Tue Sep 29 23:11:58 -03 2026
+$ python 09_auditoria.py --injetar
+===== [D4-DESVIOS-R1] DESVIOS APLICADOS (quantos, quais e onde ficam em segredo ate o --gabarito) =====
+
+--- Linux: auditoria manual (as cegas) ---
+$ python 09_auditoria.py --manual desvios
+===== [D4-DESVIOS-R1] AUDITORIA MANUAL =====
+Durante a auditoria, registre aqui cada desvio encontrado:
+  formato : <roteador> <regra>      ex.: e1 C01
+  roteador: core | e1 | e2 | e3     regra: C01 a C08
+  apagar  : remove o ultimo registro
+  fim     : para o cronometro e grava
+
+Pressione ENTER para INICIAR o cronometro...
+[00:00] desvio> core c01
+  registrado: core-router C01  (total: 1)
+[00:30] desvio> core
+  formato invalido (ex.: e1 C01)
+[01:44] desvio> core c07
+  registrado: core-router C07  (total: 2)
+[01:49] desvio> fim
+
+  Tempo total: 371.2 s | desvios apontados: 2
+    - core-router C01
+    - core-router C07
+===== [D4-DESVIOS-R1] MANUAL - registrado em logs/resultados_D4_manual.csv =====
+
+--- Consoles dos roteadores (auditoria manual) ---
+CORE-ROUTER#sh run | inc domain
+ip domain name isp-lab.local
+CORE-ROUTER#sh run | inc buffered
+logging buffered 64000
+CORE-ROUTER#sh run | inc timestamps
+service timestamps debug datetime msec
+service timestamps log datetime msec
+CORE-ROUTER#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+CORE-ROUTER#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+CORE-ROUTER#sh run | inc ntp master
+CORE-ROUTER#
+
+EDGE-ROUTER-1#sh clock
+02:14:30.328 UTC Wed Sep 30 2026
+EDGE-ROUTER-1#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-1#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-1#sh run | inc timestamps
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-1#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-1#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-1#sh tun | sec interface
+% Incomplete command before pipe.
+EDGE-ROUTER-1#sh run | sec interface
+interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.2 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+EDGE-ROUTER-2#sh clock
+02:16:19.198 UTC Wed Sep 30 2026
+EDGE-ROUTER-2#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-2#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-2#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-2#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-2#sh run | sec interface
+interface Loopback0
+ ip address 3.3.3.3 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.6 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+EDGE-ROUTER-3#sh clock
+02:17:31.299 UTC Wed Sep 30 2026
+EDGE-ROUTER-3#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-3#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-3#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-3#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-3#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-3#sh run | sec interface
+interface Loopback0
+ ip address 4.4.4.4 255.255.255.255
+interface Loopback177
+ no ip address
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.10 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+--- Linux: auditoria automatizada ---
+$ python 09_auditoria.py desvios
+===== [D4-DESVIOS-R1] INICIO - AUDITORIA =====
+
+core-router
+  [FALHA] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [FALHA] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [FALHA] C08 loopbacks de cliente com descricao padrao -> sem descricao padrao: Loopback177
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 3 FALHA(s) | 4 AVISO(s) | 4.4 s
+===== [D4-DESVIOS-R1] FIM - AUDITORIA =====
+
+--- Linux: gabarito e comparacao ---
+$ python 09_auditoria.py --gabarito
+===== [D4] GABARITO =====
+  core-router    regra C07  ->  no ntp master
+  edge-router-3  regra C08  ->  interface Loopback177
+  core-router    regra C01  ->  ip domain lookup
+
+===== [D4] RODADA 1 - COMPARACAO COM O GABARITO (3 desvios injetados) =====
+  Metodo            Tempo  Acertos  Falsos+  Nao encontrados
+  manual           371.2s  2/3            0  edge-router-3 C08
+  automatizado       4.4s  3/3            0  -
+===== [D4] COMPARACAO - registrada em logs/resultados_D4_comparacao.csv =====
+
+--- Linux: reversao ---
+$ python 09_auditoria.py --reverter
+===== [D4-DESVIOS-R1] DESVIOS REVERTIDOS =====
+$ python 09_auditoria.py pos-reversao
+===== [D4-POS-REVERSAO] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 0 FALHA(s) | 4 AVISO(s) | 4.4 s
+===== [D4-POS-REVERSAO] FIM - AUDITORIA =====
+
+==============================================================================
+RODADA 2 - 30/09/2026, sessao iniciada 10:41 (BRT)
+==============================================================================
+$ date
+Wed Sep 30 10:41:01 -03 2026
+$ python 02_backup.py
+[OK]   core-router: backups/core-router_20260930-104113.cfg (146 linhas)
+[OK]   edge-router-1: backups/edge-router-1_20260930-104113.cfg (139 linhas)
+[OK]   edge-router-2: backups/edge-router-2_20260930-104113.cfg (140 linhas)
+[OK]   edge-router-3: backups/edge-router-3_20260930-104113.cfg (139 linhas)
+$ python 09_auditoria.py --injetar
+===== [D4-DESVIOS-R2] DESVIOS APLICADOS (quantos, quais e onde ficam em segredo ate o --gabarito) =====
+
+--- Linux: auditoria manual (as cegas) ---
+$ python 09_auditoria.py --manual desvios
+===== [D4-DESVIOS-R2] AUDITORIA MANUAL =====
+Durante a auditoria, registre aqui cada desvio encontrado:
+  formato : <roteador> <regra>      ex.: e1 C01
+  roteador: core | e1 | e2 | e3     regra: C01 a C08
+  apagar  : remove o ultimo registro
+  fim     : para o cronometro e grava
+
+Pressione ENTER para INICIAR o cronometro...
+[00:00] desvio> e1 c01
+  registrado: edge-router-1 C01  (total: 1)
+[01:12] desvio> e3 c02
+  registrado: edge-router-3 C02  (total: 2)
+[05:29] desvio> e3 c03
+  registrado: edge-router-3 C03  (total: 3)
+[06:03] desvio> fim
+
+  Tempo total: 405.6 s | desvios apontados: 3
+    - edge-router-1 C01
+    - edge-router-3 C02
+    - edge-router-3 C03
+===== [D4-DESVIOS-R2] MANUAL - registrado em logs/resultados_D4_manual.csv =====
+
+--- Consoles dos roteadores (auditoria manual) ---
+CORE-ROUTER#sh clock
+13:40:29.856 UTC Wed Sep 30 2026
+CORE-ROUTER#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+CORE-ROUTER#sh run | inc buffered
+logging buffered 64000
+CORE-ROUTER#sh run | inc timestamps
+service timestamps debug datetime msec
+service timestamps log datetime msec
+CORE-ROUTER#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+CORE-ROUTER#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input telnet ssh
+CORE-ROUTER#sh run | inc ntp
+ntp master 3
+
+EDGE-ROUTER-1#sh clock
+13:42:53.612 UTC Wed Sep 30 2026
+EDGE-ROUTER-1#sh run | inc domain
+ip domain name isp-lab.local
+EDGE-ROUTER-1#sh run | inc buffer
+logging buffered 64000
+EDGE-ROUTER-1#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-1#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-1#sh run | inc vty
+line vty 0 4
+EDGE-ROUTER-1#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-1#sh run | sec interface
+interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.2 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+EDGE-ROUTER-2#sh clock
+13:46:00.599 UTC Wed Sep 30 2026
+EDGE-ROUTER-2#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-2#sh run | inc buffere
+logging buffered 64000
+EDGE-ROUTER-2#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-2#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-2#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-2#sh run | sec interface
+interface Loopback0
+ ip address 3.3.3.3 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.6 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+EDGE-ROUTER-3#sh clock
+13:46:48.274 UTC Wed Sep 30 2026
+EDGE-ROUTER-3#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-3#sh run | inc buffered
+EDGE-ROUTER-3#sh run | inc buffer
+EDGE-ROUTER-3#sh run | inc timest
+service timestamps debug datetime msec
+service timestamps log uptime
+EDGE-ROUTER-3#sh run | inc timestamp
+service timestamps debug datetime msec
+service timestamps log uptime
+EDGE-ROUTER-3#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-3#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-3#sh run | sec interface
+interface Loopback0
+ ip address 4.4.4.4 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.10 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+--- Linux: auditoria automatizada ---
+$ python 09_auditoria.py desvios
+===== [D4-DESVIOS-R2] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [FALHA] C06 vty somente SSH -> transport input telnet ssh
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [FALHA] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [FALHA] C02 logging buffered 64000
+  [FALHA] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 4 FALHA(s) | 4 AVISO(s) | 4.2 s
+===== [D4-DESVIOS-R2] FIM - AUDITORIA =====
+
+--- Linux: gabarito e comparacao ---
+$ python 09_auditoria.py --gabarito
+===== [D4] GABARITO =====
+  edge-router-1  regra C01  ->  ip domain lookup
+  edge-router-3  regra C02  ->  logging buffered 4096
+  edge-router-3  regra C03  ->  service timestamps log uptime
+  core-router    regra C06  ->  line vty 0 4 / transport input ssh telnet
+
+===== [D4] RODADA 2 - COMPARACAO COM O GABARITO (4 desvios injetados) =====
+  Metodo            Tempo  Acertos  Falsos+  Nao encontrados
+  manual           405.6s  3/4            0  core-router C06
+  automatizado       4.2s  4/4            0  -
+===== [D4] COMPARACAO - registrada em logs/resultados_D4_comparacao.csv =====
+
+--- Linux: reversao ---
+$ python 09_auditoria.py --reverter
+===== [D4-DESVIOS-R2] DESVIOS REVERTIDOS =====
+$ python 09_auditoria.py pos-reversao
+===== [D4-POS-REVERSAO] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 0 FALHA(s) | 4 AVISO(s) | 4.2 s
+===== [D4-POS-REVERSAO] FIM - AUDITORIA =====
+
+==============================================================================
+RODADA 3 - 30/09/2026, inicio 10:56 (BRT)
+==============================================================================
+$ date
+Wed Sep 30 10:56:38 -03 2026
+$ python 09_auditoria.py --injetar
+===== [D4-DESVIOS-R3] DESVIOS APLICADOS (quantos, quais e onde ficam em segredo ate o --gabarito) =====
+
+--- Linux: auditoria manual (as cegas) ---
+$ python 09_auditoria.py --manual desvios
+===== [D4-DESVIOS-R3] AUDITORIA MANUAL =====
+Durante a auditoria, registre aqui cada desvio encontrado:
+  formato : <roteador> <regra>      ex.: e1 C01
+  roteador: core | e1 | e2 | e3     regra: C01 a C08
+  apagar  : remove o ultimo registro
+  fim     : para o cronometro e grava
+
+Pressione ENTER para INICIAR o cronometro...
+[00:00] desvio> core c07
+  registrado: core-router C07  (total: 1)
+[01:35] desvio> e1 c01
+  registrado: edge-router-1 C01  (total: 2)
+[01:53] desvio> fim
+
+  Tempo total: 261.5 s | desvios apontados: 2
+    - core-router C07
+    - edge-router-1 C01
+===== [D4-DESVIOS-R3] MANUAL - registrado em logs/resultados_D4_manual.csv =====
+
+--- Consoles dos roteadores (auditoria manual) ---
+CORE-ROUTER#sh clock
+13:57:04.870 UTC Wed Sep 30 2026
+CORE-ROUTER#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+CORE-ROUTER#sh run | inc buffer
+logging buffered 64000
+CORE-ROUTER#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+CORE-ROUTER#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+CORE-ROUTER#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+CORE-ROUTER#sh run | inc ntp master
+CORE-ROUTER#sh run | inc ntp
+CORE-ROUTER#
+
+EDGE-ROUTER-1#sh clock
+13:58:40.495 UTC Wed Sep 30 2026
+EDGE-ROUTER-1#sh run | inc domain
+ip domain name isp-lab.local
+EDGE-ROUTER-1#sh run | inc buffer
+logging buffered 64000
+EDGE-ROUTER-1#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-1#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-1#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-1#sh run | sec interface
+interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.2 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+EDGE-ROUTER-2#sh clock
+13:59:38.609 UTC Wed Sep 30 2026
+EDGE-ROUTER-2#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-2#sh run | inc buffere
+logging buffered 64000
+EDGE-ROUTER-2#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-2#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-2#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-2#sh run | sec interface
+interface Loopback0
+ ip address 3.3.3.3 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.6 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+EDGE-ROUTER-3#sh clock
+14:00:24.904 UTC Wed Sep 30 2026
+EDGE-ROUTER-3#sh run | inc domain
+no ip domain lookup
+ip domain name isp-lab.local
+EDGE-ROUTER-3#sh run | inc buffered
+logging buffered 64000
+EDGE-ROUTER-3#sh run | inc times
+service timestamps debug datetime msec
+service timestamps log datetime msec
+EDGE-ROUTER-3#sh run | inc username
+username admin privilege 15 secret 9 [HASH REMOVIDO]
+EDGE-ROUTER-3#sh run | sec vty
+line vty 0 4
+ exec-timeout 0 0
+ activation-character 13
+ login local
+ transport input ssh
+EDGE-ROUTER-3#sh run | sec interface
+interface Loopback0
+ ip address 4.4.4.4 255.255.255.255
+interface Ethernet0/0
+ description LINK-TO-CORE
+ ip address 10.0.1.10 255.255.255.252
+interface Ethernet0/1
+ no ip address
+ shutdown
+interface Ethernet0/2
+ no ip address
+ shutdown
+interface Ethernet0/3
+ no ip address
+ shutdown
+
+--- Linux: auditoria automatizada ---
+$ python 09_auditoria.py desvios
+===== [D4-DESVIOS-R3] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [FALHA] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [FALHA] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 2 FALHA(s) | 4 AVISO(s) | 4.3 s
+===== [D4-DESVIOS-R3] FIM - AUDITORIA =====
+
+--- Linux: gabarito e comparacao ---
+$ python 09_auditoria.py --gabarito
+===== [D4] GABARITO =====
+  edge-router-1  regra C01  ->  ip domain lookup
+  core-router    regra C07  ->  no ntp master
+
+===== [D4] RODADA 3 - COMPARACAO COM O GABARITO (2 desvios injetados) =====
+  Metodo            Tempo  Acertos  Falsos+  Nao encontrados
+  manual           261.5s  2/2            0  -
+  automatizado       4.3s  2/2            0  -
+===== [D4] COMPARACAO - registrada em logs/resultados_D4_comparacao.csv =====
+
+--- Linux: reversao ---
+$ python 09_auditoria.py --reverter
+===== [D4-DESVIOS-R3] DESVIOS REVERTIDOS =====
+$ python 09_auditoria.py pos-reversao
+===== [D4-POS-REVERSAO] INICIO - AUDITORIA =====
+
+core-router
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C07 core como servidor NTP
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-1
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-2
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+edge-router-3
+  [OK   ] C01 no ip domain lookup
+  [OK   ] C02 logging buffered 64000
+  [OK   ] C03 timestamps de log com data e ms
+  [OK   ] C04 usuario admin com privilege 15
+  [OK   ] C05 vty com login local
+  [OK   ] C06 vty somente SSH
+  [OK   ] C08 loopbacks de cliente com descricao padrao
+  [AVISO] A01 servidor HTTP desabilitado (recomendacao) -> ip http server habilitado
+
+Resumo: 32 verificacoes em 4 roteadores | 0 FALHA(s) | 4 AVISO(s) | 4.4 s
+===== [D4-POS-REVERSAO] FIM - AUDITORIA =====
+
+==============================================================================
+RESUMO FINAL
+==============================================================================
+$ python 09_auditoria.py --resumo
+===== [D4] RESUMO DAS RODADAS =====
+  Metodo        Rodadas      Deteccao  Falsos+     Media   Mediana
+  manual              3    7/9     78%        0    346.1s    371.2s
+  automatizado        3    9/9    100%        0      4.3s      4.3s
+
+Nota sobre o cronometro manual: o tempo entre colchetes no prompt 'desvio>' e o
+do momento em que o prompt foi exibido; o tempo total e medido do ENTER inicial
+ate o 'fim'.

@@ -1,0 +1,10 @@
+data_hora,operacao,alvo,duracao_s,resultado,detalhe
+2026-10-14T10:09:10,ativacao,cliente-111,3.71,OK,BGP ok; ping 100%
+2026-10-14T10:09:13,ativacao,cliente-112,3.37,OK,BGP ok; ping 100%
+2026-10-14T10:09:17,ativacao,cliente-113,3.35,OK,BGP ok; ping 100%
+2026-10-14T10:09:20,ativacao,cliente-114,3.31,OK,BGP ok; ping 100%
+2026-10-14T10:09:24,ativacao,cliente-115,3.71,OK,BGP ok; ping 100%
+2026-10-14T10:13:26,ativacao,cliente-111,3.70,OK,BGP ok; ping 100%
+2026-10-14T10:13:30,ativacao,cliente-112,3.63,OK,BGP ok; ping 100%
+2026-10-14T10:13:37,ativacao,cliente-114,6.84,OK,BGP ok; ping 100%
+2026-10-14T10:13:44,ativacao,cliente-115,6.68,OK,BGP ok; ping 100%

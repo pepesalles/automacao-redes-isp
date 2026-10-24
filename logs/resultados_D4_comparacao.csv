@@ -1,0 +1,7 @@
+rodada,metodo,desvios_injetados,apontados,acertos,falsos_positivos,nao_encontrados,duracao_s,detalhe_nao_encontrados,detalhe_falsos_positivos
+1,manual,3,2,2,0,1,371.18,edge-router-3:C08,
+1,automatizado,3,3,3,0,0,4.37,,
+2,manual,4,3,3,0,1,405.56,core-router:C06,
+2,automatizado,4,4,4,0,0,4.19,,
+3,manual,2,2,2,0,0,261.48,,
+3,automatizado,2,2,2,0,0,4.33,,

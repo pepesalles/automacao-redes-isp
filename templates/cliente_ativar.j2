@@ -1,0 +1,6 @@
+interface Loopback{{ c.id }}
+ description CLIENTE:{{ c.nome }} | CIRCUITO:{{ c.circuito }} | VEL:{{ c.velocidade }}
+ ip address {{ gateway }} {{ mascara }}
+ no shutdown
+router bgp {{ asn }}
+ network {{ rede }} mask {{ mascara }}

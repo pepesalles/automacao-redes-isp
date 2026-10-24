@@ -1,0 +1,7 @@
+# Erros injetados de proposito (Parte D - cenarios E1 a E5)
+clientes:
+  - {id: 201, nome: ERRO-IP-INVALIDO,  circuito: CORP-0201, velocidade: 100M, roteador: edge-router-1, prefixo: 172.16.301.0/24}  # E1 octeto > 255
+  - {id: 202, nome: ERRO-BITS-HOST,    circuito: CORP-0202, velocidade: 100M, roteador: edge-router-1, prefixo: 172.16.202.5/24}  # E2 nao e endereco de rede
+  - {id: 203, nome: ERRO-ROTEADOR,     circuito: CORP-0203, velocidade: 100M, roteador: edge-router-9, prefixo: 172.16.203.0/24}  # E3 roteador inexistente
+  - {id: 204, nome: ERRO-PREFIXO-USO,  circuito: CORP-0204, velocidade: 100M, roteador: edge-router-2, prefixo: 172.16.101.0/24}  # E4 prefixo ja usado (ative o 101 antes)
+  - {id: 205, nome: ERRO-CAMPO,        circuito: CORP-0205,                   roteador: edge-router-1, prefixo: 172.16.205.0/24}  # E5 campo obrigatorio ausente

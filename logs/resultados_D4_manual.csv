@@ -1,0 +1,4 @@
+execucao,duracao_s,desvios_encontrados,achados
+desvios-r1,371.18,2,core-router:C01; core-router:C07
+desvios-r2,405.56,3,edge-router-1:C01; edge-router-3:C02; edge-router-3:C03
+desvios-r3,261.48,2,core-router:C07; edge-router-1:C01

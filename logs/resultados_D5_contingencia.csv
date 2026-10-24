@@ -1,0 +1,11 @@
+cenario,cliente,principal,backup,decisao,roteador_usado,resultado,deteccao_s,total_s
+controle,111,edge-router-1,edge-router-3,PRINCIPAL,edge-router-1,OK,0.00,3.75
+controle,112,edge-router-1,edge-router-3,PRINCIPAL,edge-router-1,OK,0.00,3.40
+controle,113,edge-router-1,-,PRINCIPAL,edge-router-1,OK,0.00,3.38
+controle,114,edge-router-2,-,PRINCIPAL,edge-router-2,OK,0.00,3.34
+controle,115,edge-router-2,-,PRINCIPAL,edge-router-2,OK,0.00,3.76
+falha,111,edge-router-1,edge-router-3,CONTINGENCIA,edge-router-3,OK,0.00,3.72
+falha,112,edge-router-1,edge-router-3,CONTINGENCIA,edge-router-3,OK,0.00,3.66
+falha,113,edge-router-1,-,FALHA_SEGURA,-,NAO_APLICADO,0.00,0.00
+falha,114,edge-router-2,-,PRINCIPAL,edge-router-2,OK,0.00,6.87
+falha,115,edge-router-2,-,PRINCIPAL,edge-router-2,OK,0.00,6.71

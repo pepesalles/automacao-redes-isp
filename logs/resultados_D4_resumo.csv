@@ -1,0 +1,8 @@
+execucao,roteadores,verificacoes,falhas,avisos,duracao_s
+baseline,4,32,0,4,4.12
+desvios-r1,4,32,3,4,4.37
+pos-reversao,4,32,0,4,4.37
+desvios-r2,4,32,4,4,4.19
+pos-reversao,4,32,0,4,4.22
+desvios-r3,4,32,2,4,4.33
+pos-reversao,4,32,0,4,4.37

@@ -1,0 +1,8 @@
+# Inventario do laboratorio: gerencia pelas loopbacks (alcancaveis via OSPF)
+asn: 65001
+roteador_verificacao: core-router   # Route Reflector: enxerga todos os prefixos
+roteadores:
+  core-router:   {host: 1.1.1.1, funcao: nucleo-route-reflector}
+  edge-router-1: {host: 2.2.2.2, funcao: borda-corporativo}
+  edge-router-2: {host: 3.3.3.3, funcao: borda-residencial}
+  edge-router-3: {host: 4.4.4.4, funcao: borda-peering}

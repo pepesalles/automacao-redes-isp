@@ -1,0 +1,31 @@
+data_hora,operacao,alvo,duracao_s,resultado,detalhe
+2026-09-27T17:27:58,remocao,cliente-101,1.57,OK,
+2026-09-27T17:28:04,ativacao,cliente-101,5.57,OK,BGP ok; ping 80%
+2026-09-27T17:28:06,remocao,cliente-101,1.50,OK,
+2026-09-27T17:41:57,remocao,cliente-102,1.65,OK,
+2026-09-27T17:42:03,ativacao,cliente-102,5.66,OK,BGP ok; ping 80%
+2026-09-27T17:42:05,remocao,cliente-102,1.67,OK,
+2026-09-29T00:01:56,remocao,cliente-103,1.54,OK,
+2026-09-29T00:02:01,ativacao,cliente-103,5.55,OK,BGP ok; ping 80%
+2026-09-29T00:02:03,remocao,cliente-103,1.39,OK,
+2026-09-29T00:04:28,remocao,cliente-104,1.59,OK,
+2026-09-29T00:04:34,ativacao,cliente-104,5.54,OK,BGP ok; ping 80%
+2026-09-29T00:04:36,remocao,cliente-104,1.63,OK,
+2026-09-29T00:14:31,remocao,cliente-105,1.56,OK,
+2026-09-29T00:14:38,ativacao,cliente-105,6.88,OK,BGP ok; ping 100%
+2026-09-29T00:14:40,remocao,cliente-105,1.58,OK,
+2026-09-29T10:38:34,remocao,cliente-106,1.53,OK,
+2026-09-29T10:38:40,ativacao,cliente-106,5.42,OK,BGP ok; ping 80%
+2026-09-29T10:38:42,remocao,cliente-106,1.46,OK,
+2026-09-29T10:48:08,remocao,cliente-107,1.39,OK,
+2026-09-29T10:48:14,ativacao,cliente-107,5.69,OK,BGP ok; ping 80%
+2026-09-29T10:48:15,remocao,cliente-107,1.57,OK,
+2026-09-29T10:55:42,remocao,cliente-108,1.62,OK,
+2026-09-29T10:55:48,ativacao,cliente-108,5.77,OK,BGP ok; ping 80%
+2026-09-29T10:55:50,remocao,cliente-108,1.54,OK,
+2026-09-29T10:57:45,remocao,cliente-109,1.49,OK,
+2026-09-29T10:57:51,ativacao,cliente-109,5.55,OK,BGP ok; ping 80%
+2026-09-29T10:57:53,remocao,cliente-109,1.70,OK,
+2026-09-29T11:00:00,remocao,cliente-110,1.60,OK,
+2026-09-29T11:00:06,ativacao,cliente-110,5.47,OK,BGP ok; ping 80%
+2026-09-29T11:00:07,remocao,cliente-110,1.56,OK,
