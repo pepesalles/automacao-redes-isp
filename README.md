@@ -8,6 +8,8 @@ Código, dados e registros do Trabalho de Conclusão de Curso **"Aplicação de 
 
 📄 **Artigo completo:** [artigo/TCC_Gabriel_Henrique_de_Salles.pdf](artigo/TCC_Gabriel_Henrique_de_Salles.pdf)
 
+📊 **Slides da banca:** [PDF](apresentacao/Apresentacao_TCC_Gabriel_Henrique_de_Salles.pdf) · [PowerPoint, com o vídeo da demonstração embutido](apresentacao/Apresentacao_TCC_Gabriel_Henrique_de_Salles.pptx)
+
 O projeto automatiza a **ativação de clientes corporativos** em roteadores de borda de um ISP e compara o resultado com o processo manual, medindo tempo, erros e capacidade de detectar falhas. Também automatiza a **auditoria de conformidade** da configuração dos roteadores.
 
 ## Principais resultados
@@ -56,6 +58,7 @@ Identificadores: D = experimento; R = repetição ou rodada; E = erro injetado (
 | Arquivo | Função |
 |---|---|
 | `artigo/` | Artigo completo do TCC (PDF) |
+| `apresentacao/` | Slides apresentados na banca: PDF e PowerPoint (com o vídeo da demonstração) |
 | `inventario.yaml` | Roteadores, IPs de gerência e ASN |
 | `clientes.yaml` | 10 clientes corporativos (101–110) |
 | `clientes_erros.yaml` | 5 clientes com erros injetados de propósito (E1–E5) |
